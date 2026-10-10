@@ -1,16 +1,12 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { connectDB, isDBConnected } from './server/config/db.js';
 import resourceRoutes from './server/routes/resourceRoutes.js';
 import userRoutes from './server/routes/userRoutes.js';
 import aiRoutes from './server/routes/aiRoutes.js';
 import adminRoutes from './server/routes/adminRoutes.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function startServer(): Promise<void> {
   const app = express();

@@ -565,12 +565,19 @@ export async function uploadResource(req: Request, res: Response): Promise<void>
         }
       }
 
-      // If no valid uploadedBy, fallback to first user in database
+      // If no valid uploadedBy, fallback to first user in database or create default admin
       if (!validUploadedBy) {
-        const firstUser = await User.findOne();
-        if (firstUser) {
-          validUploadedBy = firstUser._id;
+        let firstUser = await User.findOne();
+        if (!firstUser) {
+          firstUser = await User.create({
+            name: contributorName?.trim() || 'Anurag Dewangan',
+            email: 'anuragdewangan06@gmail.com',
+            role: 'admin',
+            department: `${normalizedBranch} Engineering`,
+            semester: parsedSemester,
+          });
         }
+        validUploadedBy = firstUser._id;
       }
 
       // Create Mongoose document
@@ -755,15 +762,7 @@ export async function upvoteResource(req: Request, res: Response): Promise<void>
     }
 
     // 1. Live MongoDB Atomic Upvote
-    if (isDBConnected()) {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid Resource ID format',
-        });
-        return;
-      }
-
+    if (isDBConnected() && mongoose.Types.ObjectId.isValid(id)) {
       // Atomically increment upvotes field by 1 using MongoDB $inc operator
       const updatedResource = await Resource.findByIdAndUpdate(
         id,
@@ -771,21 +770,15 @@ export async function upvoteResource(req: Request, res: Response): Promise<void>
         { new: true, runValidators: true }
       ).populate('uploadedBy', 'name email department role');
 
-      if (!updatedResource) {
-        res.status(404).json({
-          success: false,
-          message: `Resource with ID ${id} not found`,
+      if (updatedResource) {
+        res.status(200).json({
+          success: true,
+          message: 'Resource upvoted successfully',
+          storage: 'mongodb',
+          data: updatedResource,
         });
         return;
       }
-
-      res.status(200).json({
-        success: true,
-        message: 'Resource upvoted successfully',
-        storage: 'mongodb',
-        data: updatedResource,
-      });
-      return;
     }
 
     // 2. In-Memory Store Execution

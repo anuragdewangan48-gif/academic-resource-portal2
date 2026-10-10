@@ -189,31 +189,19 @@ export async function deleteAdminResource(req: Request, res: Response): Promise<
 
     let deletedTitle = 'Resource';
     let fileUrlToDelete: string | null = null;
+    let deletedFromMongo = false;
 
-    if (isDBConnected()) {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400).json({
-          success: false,
-          message: `Invalid Resource ID format: '${id}'`,
-        });
-        return;
-      }
-
+    if (isDBConnected() && mongoose.Types.ObjectId.isValid(id)) {
       const resourceToDelete = await Resource.findById(id);
-      if (!resourceToDelete) {
-        res.status(404).json({
-          success: false,
-          message: `Resource with ID '${id}' not found in database.`,
-        });
-        return;
+      if (resourceToDelete) {
+        deletedTitle = resourceToDelete.title;
+        fileUrlToDelete = resourceToDelete.fileUrl;
+        await Resource.findByIdAndDelete(id);
+        deletedFromMongo = true;
       }
+    }
 
-      deletedTitle = resourceToDelete.title;
-      fileUrlToDelete = resourceToDelete.fileUrl;
-
-      // Delete from MongoDB
-      await Resource.findByIdAndDelete(id);
-    } else {
+    if (!deletedFromMongo) {
       // In-Memory Fallback
       const currentList = getInMemoryResourcesList();
       const existing = currentList.find((r) => r._id === id);
@@ -221,7 +209,7 @@ export async function deleteAdminResource(req: Request, res: Response): Promise<
       if (!existing) {
         res.status(404).json({
           success: false,
-          message: `Resource with ID '${id}' not found in in-memory repository.`,
+          message: `Resource with ID '${id}' not found.`,
         });
         return;
       }
