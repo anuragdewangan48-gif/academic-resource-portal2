@@ -1,6 +1,7 @@
 # 📚 Academic Resource & PYQ Portal (AcademiaPYQ)
 
 Welcome to the **Academic Resource & Past Year Questions (PYQ) Portal**! 
+link :
 
 This web application is an all-in-one university hub designed to help engineering and college students easily browse, search, and download verified semester examination question papers, lecture notes, syllabus sheets, and lab manuals. It also includes an integrated AI study assistant powered by Google Gemini and an administrative control panel for university moderators.
 
